@@ -6,10 +6,16 @@ import java.util.Map;
 
 import org.springframework.web.bind.annotation.RestController;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
@@ -29,15 +35,28 @@ public class SearchController{
     private final static String INDEX_NAME = "annual_reports";
     Logger logger = LoggerFactory.getLogger(SearchController.class);
 
+    // final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+
+
     @GetMapping(value="/search")
     public ResponseJson getMethodName(@RequestParam(name = "q") String queryString, @RequestParam(name = "p") Integer pageNumber) {        
                 
+        // credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("charlie", "munger"));
+        // RestClientBuilder builder = RestClient.builder(new HttpHost("xperiment.xyz", 80, "http"))
+        // .setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback(){        
+        //     @Override
+        //     public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
+        //         return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+        //     }
+        // }); 
+        // RestHighLevelClient client = new RestHighLevelClient(builder);
+        RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
+
         logger.debug("Initiating search for: " + queryString);
         
         ResponseJson responseJson = new ResponseJson();
         List<SearchResult> searchResults =  new ArrayList<SearchResult>();        
-
-        RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
+        
         SearchRequest searchRequest = new SearchRequest();
         searchRequest.indices(INDEX_NAME);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -77,8 +96,11 @@ public class SearchController{
                     for(Text txtFragment : fragments){
                         fragmentString.add(txtFragment.string());
                     }                    
-                    searchResults.add(new SearchResult(companyName, year, page, fragmentString, content));
+                    searchResults.add(new SearchResult(companyName, year, page, fragmentString, content));                    
                 }
+                // for(SearchResult sres : searchResults){
+                //     logger.debug(sres.toString());
+                // }
                 responseJson = new ResponseJson("OK", searchResults, hitsCount);
                 client.close();
         } catch (Exception e) {            

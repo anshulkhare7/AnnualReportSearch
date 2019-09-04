@@ -47,4 +47,10 @@ public class SearchResult{
     public String getContent(){
         return content;
     }
+
+    @Override
+    public String toString() {
+        return "SearchResult [companyName=" + companyName + ", content=" + content + ", pageNumber=" + pageNumber
+                + ", year=" + year + "]";
+    }    
 }
