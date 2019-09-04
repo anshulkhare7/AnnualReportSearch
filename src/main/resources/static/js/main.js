@@ -5,24 +5,28 @@ $( document ).ready(function() {
         numberOfPages = Math.ceil(resultCount / 10)
 
         if(currPage>1){
-            pageHtml = '<li onclick="getPage('+(currPage-1)+')" class="page-item"><a class="page-link" href="#" tabindex="-1">Previous</a></li>'
+            pageHtml = '<li onclick="getPage(1)" class="page-item"><a class="page-link" href="#" tabindex="-1"><<</a></li>'
+            pageHtml = pageHtml + '<li onclick="getPage('+(currPage-1)+')" class="page-item"><a class="page-link" href="#" tabindex="-1"><</a></li>'
         }else{
-            pageHtml = '<li class="page-item disabled"><a class="page-link" href="#" tabindex="-1">Previous</a></li>'
+            pageHtml = '<li class="page-item disabled"><a class="page-link" href="#" tabindex="-1"><<</a></li>'
+            pageHtml = pageHtml + '<li class="page-item disabled"><a class="page-link" href="#" tabindex="-1"><</a></li>'            
         }
         for(i=1; i <= numberOfPages; i++){
             if((currPage-i) > 2 || (i-currPage)>2 ){
                 continue
             }
-            if(i==currPage){
+            if(i==currPage){                
                 pageHtml = pageHtml + '<li class="page-item active"><a class="page-link" href="#">'+i+'</a></li>'
             }else{
                 pageHtml = pageHtml + '<li onclick="getPage('+i+')" class="page-item"><a class="page-link" href="#">'+i+'</a></li>'
             }            
         }
         if(currPage==numberOfPages){
-            pageHtml = pageHtml + '<li class="page-item disabled"><a class="page-link" href="#">Next</a></li>'
+            pageHtml = pageHtml + '<li class="page-item disabled"><a class="page-link" href="#">></a></li>'
+            pageHtml = pageHtml + '<li class="page-item disabled"><a class="page-link" href="#">>></a></li>'
         }else{
-            pageHtml = pageHtml + '<li class="page-item" onclick="getPage('+(currPage+1)+')"><a class="page-link" href="#">Next</a></li>'            
+            pageHtml = pageHtml + '<li class="page-item" onclick="getPage('+(currPage+1)+')"><a class="page-link" href="#">></a></li>'            
+            pageHtml = pageHtml + '<li class="page-item" onclick="getPage('+numberOfPages+')"><a class="page-link" href="#">>></a></li>'
         }
 
         $('#pagination ul.pagination').html(pageHtml)
