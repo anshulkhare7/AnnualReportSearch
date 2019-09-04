@@ -80,7 +80,7 @@ public class SearchController{
                 
                 SearchHits searchHits = searchResponse.getHits();    
                 long hitsCount = searchHits.getTotalHits().value;
-                logger.debug("Total results for the query phrase ''"+queryString+"' : "+hitsCount);
+                logger.debug("Total results for the query phrase '"+queryString+"' : "+hitsCount);
 
                 for (SearchHit searchHit : searchHits) {                                        
                     Map<String, Object> sourceAsMap = searchHit.getSourceAsMap();
