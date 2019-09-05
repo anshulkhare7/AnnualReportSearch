@@ -39,10 +39,10 @@ $( document ).ready(function() {
         getPage(1)
     });
 
-    getPage = function (pageNumber){
-        $('#result-container').empty()
+    getPage = function (pageNumber){        
         $('#modal-container').empty()        
         $('#pagination').hide()
+        $('#result-container').html('<img src="https://wpamelia.com/wp-content/uploads/2018/11/ezgif-2-6d0b072c3d3f.gif"></a>')
 
         query  = $('#search-input').val()
         if(query==''){
@@ -55,37 +55,41 @@ $( document ).ready(function() {
         jqxhr.done(function(data, status) {
             if(data['status']=='OK'){
                 searchResult = data['searchResults']
-                refreshPagination(data['resultCount'], pageNumber)
-                
-                $.each(searchResult, function(index, item){                    
-                    newRow = $('#result-template').clone()                    
-                    newModal = $('#exampleModalLong').clone()
+                if(searchResult.length > 0){
+                    refreshPagination(data['resultCount'], pageNumber)
+                    $('#result-container').empty()
+                    $.each(searchResult, function(index, item){                    
+                        newRow = $('#result-template').clone()                    
+                        newModal = $('#exampleModalLong').clone()
 
-                    newRowId = 'result-'+index
-                    newModalId = 'modal-'+index
+                        newRowId = 'result-'+index
+                        newModalId = 'modal-'+index
 
-                    newRow.attr('id', newRowId)
-                    newModal.attr('id', newModalId)
+                        newRow.attr('id', newRowId)
+                        newModal.attr('id', newModalId)
 
-                    newRow.appendTo("#result-container")
-                    newModal.appendTo("#modal-container")
+                        newRow.appendTo("#result-container")
+                        newModal.appendTo("#modal-container")
 
-                    $('#'+newRowId+' h5.card-header').html(item['companyName']+' ('+item['year']+') ')                    
-                    $('#'+newRowId+' .card-footer').html('Page No: '+item['pageNumber'])
-                    $.each(item['searchFragment'], function(idx, frg){
-                        fragment = $('#result-template p.card-text').clone()
-                        fragment.html(frg)
-                        $('#'+newRowId+' .card-body').append(fragment).append('<hr/>')                    
-                    })                                        
-                    $('#'+newRowId+' .card-body').append('<a href="#" data-toggle="modal" data-target="#'+newModalId+'" class="btn btn-primary">View Page (text)</a>')                    
-                    newRow.show()
+                        $('#'+newRowId+' h5.card-header').html(item['companyName']+' ('+item['year']+') ')                    
+                        $('#'+newRowId+' .card-footer').html('Page No: '+item['pageNumber'])
+                        $.each(item['searchFragment'], function(idx, frg){
+                            fragment = $('#result-template p.card-text').clone()
+                            fragment.html(frg)
+                            $('#'+newRowId+' .card-body').append(fragment).append('<hr/>')                    
+                        })                                        
+                        $('#'+newRowId+' .card-body').append('<a href="#" data-toggle="modal" data-target="#'+newModalId+'" class="btn btn-primary">View Page (text)</a>')                    
+                        newRow.show()
 
-                    newModal.find('.modal-title').html(item['companyName']+' ('+item['year']+') | Page No: '+item['pageNumber'])
-                    newModal.find('.modal-body').html(item['content'])                    
-                })
+                        newModal.find('.modal-title').html(item['companyName']+' ('+item['year']+') | Page No: '+item['pageNumber'])
+                        newModal.find('.modal-body').html(item['content'])                    
+                    })
+                }else{
+                    $('#result-container').html('<div id="result-template" class="row"><div class="col-sm"><div class="card text-center"><h5 class="card-header">Found Nothing</h5></div></div></div>')
+                }
             }                        
         });
-            
+
         jqxhr.fail(function(data, status) {
             console.log(data['responseText']);            
         });
