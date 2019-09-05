@@ -85,6 +85,7 @@ $( document ).ready(function() {
                         newModal.find('.modal-body').html(item['content'])                    
                     })
                 }else{
+                    $('#pagination ul.pagination').empty()
                     $('#result-container').html('<div id="result-template" class="row"><div class="col-sm"><div class="card text-center"><h5 class="card-header">Found Nothing</h5></div></div></div>')
                 }
             }                        
