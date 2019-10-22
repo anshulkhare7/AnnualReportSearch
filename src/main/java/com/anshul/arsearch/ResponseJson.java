@@ -1,32 +1,24 @@
 package com.anshul.arsearch;
 
-import java.util.List;
-
-public class ResponseJson{
+public class ResponseJson {
 
     private String status = "ERROR";
-    private List<SearchResult> searchResults;
-    private long resultCount = 0;
+    private SearchData searchData;
 
-    public ResponseJson(){        
+    public ResponseJson() {
     }
 
-    public ResponseJson(String status, List<SearchResult> searchResults, long resultCount) {
-        this.status = status;
-        this.searchResults = searchResults;
-        this.resultCount = resultCount;
+    public SearchData getSearchData() {
+        return searchData;
     }
 
-    public String getStatus() {
+     public String getStatus() {
         return status;
     }
 
-    public List<SearchResult> getSearchResults() {
-        return searchResults;
-    }
-
-    public long getResultCount(){
-        return resultCount;
+    public ResponseJson(String status, SearchData searchData) {
+        this.status = status;
+        this.searchData = searchData;
     }
     
 }

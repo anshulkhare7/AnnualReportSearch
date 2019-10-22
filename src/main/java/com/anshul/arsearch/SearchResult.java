@@ -3,21 +3,24 @@ package com.anshul.arsearch;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SearchResult{
+public class SearchResult {
 
     private String companyName;
     private String year;
     private long pageNumber;
+    private String pdfUrl;
     private List<String> searchFragment;
-    private String content;
+    private String content;    
 
-    public SearchResult(String companyName, String year, long pageNumber, List<String> searchFragment, String content) {
+    public SearchResult(String companyName, String year, long pageNumber, List<String> searchFragment, String pdfUrl,
+            String content) {
         super();
         this.companyName = companyName;
         this.year = year;
-        this.pageNumber = pageNumber; 
+        this.pageNumber = pageNumber;
         this.searchFragment = searchFragment;
-        this.content = content;
+        this.pdfUrl = pdfUrl;
+        this.content = content;        
     }
 
     public SearchResult(String companyName, String year, long pageNumber) {
@@ -48,9 +51,13 @@ public class SearchResult{
         return content;
     }
 
+    public String getPdfUrl(){
+        return pdfUrl;
+    }   
+
     @Override
     public String toString() {
         return "SearchResult [companyName=" + companyName + ", content=" + content + ", pageNumber=" + pageNumber
                 + ", year=" + year + "]";
-    }    
+    }
 }

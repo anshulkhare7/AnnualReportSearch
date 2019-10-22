@@ -9,3 +9,7 @@ nav#pagination{
 em{
     background-color: yellow;
 }
+
+.mr-2{
+    margin-bottom: .5rem!important
+}

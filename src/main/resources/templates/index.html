@@ -13,11 +13,21 @@
         <!-- <div id="root"></div> -->
         <nav class="navbar navbar-light bg-light justify-content-between">
             <a class="navbar-brand">Annual Report Search</a>
+            <button id="filters-btn" class="btn btn-outline-success btn-sm" type="button">
+                        Show Filters&nbsp;&nbsp;&#8681;
+            </button>
             <form class="form-inline">
                 <input id="search-input" class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-                <button id="search-btn" class="btn btn-outline-success my-2 my-sm-0" type="button">Search</button>
+                <button id="search-btn" class="btn btn-outline-success my-2 my-sm-0" type="button">Search</button>                
             </form>
-        </nav>    
+        </nav> 
+        <nav class="navbar navbar-light bg-light">
+            <div id="filter-container">
+                <div class="card card-body">
+                    <div id="filter-body" class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups"></div>    
+                </div>
+            </div>
+        </nav>   
         <nav id="pagination" aria-label="Page navigation example">
             <ul class="pagination justify-content-center">                                                
             </ul>
