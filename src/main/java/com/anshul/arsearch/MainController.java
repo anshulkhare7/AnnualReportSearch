@@ -10,4 +10,10 @@ public class MainController {
     public String index() {
         return "index";
     }
+
+    @RequestMapping(value = "/new")
+    public String index_new() {
+        return "index-new";
+    }
+
 }

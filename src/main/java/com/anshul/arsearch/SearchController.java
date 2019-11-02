@@ -51,7 +51,7 @@ public class SearchController{
 
     @Value("${elasticsearch.port}")
     private int elasticPort;
-
+    
     @GetMapping(value="/search")
     public ResponseJson getMethodName(@RequestParam(name = "q") String queryString, @RequestParam(name = "f") String filterString,
                                              @RequestParam(name = "p") Integer pageNumber) {        
