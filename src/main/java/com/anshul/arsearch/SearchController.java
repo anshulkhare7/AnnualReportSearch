@@ -31,10 +31,13 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@PropertySource(ignoreResourceNotFound = true, value = "classpath:application.properties")
 @RestController
 public class SearchController{
     
@@ -43,14 +46,17 @@ public class SearchController{
 
     final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 
+    @Value("${elasticsearch.host}")
+    private String elasticHostName;
+
+    @Value("${elasticsearch.port}")
+    private int elasticPort;
 
     @GetMapping(value="/search")
     public ResponseJson getMethodName(@RequestParam(name = "q") String queryString, @RequestParam(name = "f") String filterString,
                                              @RequestParam(name = "p") Integer pageNumber) {        
                         
-        // RestClientBuilder builder = RestClient.builder(new HttpHost("localhost", 9200, "http"));
-
-        RestClientBuilder builder = RestClient.builder(new HttpHost("xperiment.xyz", 8082, "http"));
+        RestClientBuilder builder = RestClient.builder(new HttpHost(elasticHostName, elasticPort, "http"));        
         credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("elasticadmin", "3|@$t!c777"));
         builder.setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback(){        
             @Override
