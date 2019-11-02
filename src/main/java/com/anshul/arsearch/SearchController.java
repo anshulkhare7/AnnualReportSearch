@@ -47,19 +47,20 @@ public class SearchController{
     @GetMapping(value="/search")
     public ResponseJson getMethodName(@RequestParam(name = "q") String queryString, @RequestParam(name = "f") String filterString,
                                              @RequestParam(name = "p") Integer pageNumber) {        
-                
-        // credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("elasticadmin", "3|@$t!c777"));
-        // RestClientBuilder builder = RestClient.builder(new HttpHost("xperiment.xyz", 8082, "http"))
-        // .setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback(){        
-        //     @Override
-        //     public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
-        //         return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
-        //     }
-        // }); 
-        // RestHighLevelClient client = new RestHighLevelClient(builder);
-        RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
+                        
+        // RestClientBuilder builder = RestClient.builder(new HttpHost("localhost", 9200, "http"));
 
-        logger.debug("Initiating search for: " + queryString);
+        RestClientBuilder builder = RestClient.builder(new HttpHost("xperiment.xyz", 8082, "http"));
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("elasticadmin", "3|@$t!c777"));
+        builder.setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback(){        
+            @Override
+            public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
+                return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+            }
+        }); 
+        RestHighLevelClient client = new RestHighLevelClient(builder);
+
+        logger.info("Initiating queryString: [" + queryString + "] | filterString: ["+filterString+"]");
         
         ResponseJson responseJson = new ResponseJson();
         List<SearchResult> searchResults =  new ArrayList<SearchResult>();        
@@ -94,7 +95,7 @@ public class SearchController{
                 searchSourceBuilder.aggregation(aggregationBuilder);
 
                 searchRequest.source(searchSourceBuilder);
-                logger.debug("Request: "+searchRequest.toString());
+                logger.info("Request: "+searchRequest.toString());
 
                 SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
                 
@@ -109,7 +110,7 @@ public class SearchController{
 
                 SearchHits searchHits = searchResponse.getHits();    
                 long hitsCount = searchHits.getTotalHits().value;
-                logger.debug("Total results for the query phrase '"+queryString+"' : "+hitsCount);
+                logger.info("Total results for the query phrase '"+queryString+"' : "+hitsCount);
                 searchData.setResultCount(hitsCount);
                 searchFilters.add(new SearchFilter("All", hitsCount));
 

@@ -89,11 +89,11 @@ $( document ).ready(function() {
         getPage(1)
     }
     $('#search-btn').click(function(){ 
-        filterString = '';          
+        filterString = '';             
         getPage(1)
     });
 
-    $('#filters-btn').click(function(){
+    toggleFilters = function(){
         if(filtersVisible){            
             $('#filter-container').slideUp()
             $(this).html('Show Filters&nbsp;&nbsp;&#8681;')            
@@ -102,6 +102,10 @@ $( document ).ready(function() {
             $(this).html('Hide Filters&nbsp;&nbsp;&#8679;')                        
         }
         filtersVisible = !filtersVisible
+    }
+
+    $('#filters-btn').click(function(){
+        toggleFilters()
     });             
 
     getPage = function (pageNumber){        
