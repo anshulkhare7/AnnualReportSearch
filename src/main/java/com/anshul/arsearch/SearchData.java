@@ -4,20 +4,19 @@ import java.util.List;
 
 public class SearchData {
     private List<SearchResult> searchResults;
-    private List<SearchFilter> searchFilters;
+    private List<Filter> searchFilters;
     private long resultCount;
 
     public List<SearchResult> getSearchResults() {
         return searchResults;
     }
 
-    public List<SearchFilter> getSearchFilters() {
+    public List<Filter> getSearchFilters() {
         return searchFilters;
     }
 
-    public SearchData(List<SearchResult> searchResults, List<SearchFilter> searchFilters) {
-        this.searchResults = searchResults;
-        this.searchFilters = searchFilters;
+    public SearchData(List<SearchResult> searchResults) {
+        this.searchResults = searchResults;        
     }
 
     public long getResultCount() {
@@ -27,12 +26,18 @@ public class SearchData {
     public void setResultCount(long resultCount) {
         this.resultCount = resultCount;
     }
+    
+    public void setSearchFilters(List<Filter> searchFilters) {
+        this.searchFilters = searchFilters;
+    }
 
     @Override
     public String toString() {
         StringBuilder searchDataBuilder = new StringBuilder();
-        searchResults.forEach(action -> searchDataBuilder.append(action.toString()));
-        searchFilters.forEach(action -> searchDataBuilder.append(action.toString()));
+        if(null!=searchResults)
+            searchResults.forEach(action -> searchDataBuilder.append(action.toString()));
+        if(null!=searchFilters)            
+            searchFilters.forEach(action -> searchDataBuilder.append(action.toString()));
         return "SearchData [ Total Count: "+resultCount+"] Data ["+searchDataBuilder.toString()+"]";
     }
 }

@@ -17,11 +17,11 @@
 
 <body>
 <div class="wrapper">
-<nav class="navbar navbar-light bg-light justify-content-between">
+<nav class="navbar navbar-dark bg-dark text-light justify-content-between">
     <a class="navbar-brand">Annual Report Search</a>    
     <form class="form-inline">
-        <input id="search-input" class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-        <button id="search-btn" class="btn btn-outline-success my-2 my-sm-0" type="button">Search</button>                
+        <input id="search-input" class="form-control mr-sm-2" type="search" placeholder="Enter Search Phrase" aria-label="Search">
+        <button id="search-btn" class="btn btn-outline-info my-2 my-sm-0" type="button">Search</button>                
     </form>
 </nav>     
 <div class="container-fluid">    
@@ -31,11 +31,8 @@
                 <article class="card-group-item">
                     <header class="card-header filter-header"><h6 class="title">Year</h6></header>
                     <div class="filter-content">
-                        <div class="card-body">
-                            <label class="btn btn-outline-success btn-sm">
-                            <input class="" type="checkbox" name="myradio" value="">
-                            <span class="form-check-label">Red</span>
-                            </label>
+                        <div id="year-filter" class="list-group list-group-flush">
+                            <!-- <label class="btn btn-outline-success btn-sm"><input class="" type="checkbox" name="myradio" value=""><span class="form-check-label">Red</span></label>
                             <label class="btn btn-outline-success btn-sm">
                             <input class="" type="checkbox" name="myradio" value="">
                             <span class="form-check-label">Green</span>
@@ -43,14 +40,14 @@
                             <label class="btn btn-outline-success btn-sm">
                             <input class="" type="checkbox" name="myradio" value="">
                             <span class="form-check-label">Blue</span>
-                            </label>
+                            </label> -->
                         </div> <!-- card-body.// -->
                     </div>
                 </article> <!-- card-group-item.// -->
                 <article class="card-group-item">
                     <header class="card-header filter-header"><h6 class="title">Company Name</h6></header>
                     <div class="filter-content">
-                        <div class="list-group list-group-flush">
+                        <div id="company-filter" class="list-group list-group-flush">
                         <a href="#" class="list-group-item">Cras justo odio <span class="float-right badge badge-light round">142</span> </a>
                         <a href="#" class="list-group-item">Dapibus ac facilisis  <span class="float-right badge badge-light round">3</span>  </a>
                         <a href="#" class="list-group-item">Morbi leo risus <span class="float-right badge badge-light round">32</span>  </a>
@@ -113,7 +110,7 @@
 </div> 
 <!--container end.//-->
 </div>
-<div class="footer bg-light">
+<div class="footer bg-dark text-light">
     <p>Handcrafted with <i class="fa fa-heart" style="color: red"></i> by <a href="https://anshulkhare.in/">Anshul</a></p>
 </div>
 <script src="/js/main-new.js"></script>

@@ -1,9 +1,9 @@
 $( document ).ready(function() {          
     console.log('Document ready!')
 
-    
+    var filters = []
     filterString = '';
-    filtersVisible = false;
+    filtersVisible = false; 
 
     $('aside').hide()
     $('#pagination').hide()
@@ -40,19 +40,59 @@ $( document ).ready(function() {
 
         $('#pagination ul.pagination').html(pageHtml)
         $('#pagination').show()
-    }    
+    }       
 
-    populateFilters = function(searchFilters){
-        $('#filter-body').empty()
-        $.each(searchFilters, function(index, item){
-            grp_name = 'group-'+(index+1)
-            html = '<div class="btn-group mr-2" role="group" aria-label="'+grp_name+'">';
-            html += '<button type="button" onclick="getFilteredResults(\''+item['name']+'\')" class="btn btn-primary btn-sm">';
-            html += '<span>'+item['name']+'</span>&nbsp;&nbsp;';
-            html += '<span class="badge badge-light">' + item['count'] + '</span></button></div>';                        
-            $('#filter-body').append(html)
+    populateCompanyFilters = function(pageNumber){
+        $('#company-filter').empty()
+        query  = $('#search-input').val()
+        if(query==''){
+            return false;
+        }
+        COMPANY_FILTER_URL = '/companyfilters';
+        
+        var jqxhr = $.get( COMPANY_FILTER_URL, {'q':query, 'f': filterString, 'p':pageNumber});        
+        jqxhr.done(function(data, status) {
+            if(data['status']=='OK'){
+                searchData = data['searchData']
+                console.log(searchData)
+                searchFilters = searchData['searchFilters']
+                $.each(searchFilters, function(index, item){
+                    html = '<a href="#" onclick="filterByCompany(\''+item['name']+'\')" class="list-group-item">'+item['name']+' <span class="float-right badge badge-light round">'+ item['count']+'</span> </a>'
+                    $('#company-filter').append(html)
+                })
+            }
         })
-    }    
+
+        jqxhr.fail(function(data, status) {
+            console.log(data['responseText']);            
+        });
+    }
+
+    populateYearFilters = function(pageNumber){
+        $('#year-filter').empty()
+        query  = $('#search-input').val()
+        if(query==''){
+            return false;
+        }
+        YEAR_FILTER_URL = '/yearfilters';
+
+        var jqxhr = $.get(YEAR_FILTER_URL, {'q':query, 'f': filterString, 'p':pageNumber});
+        jqxhr.done(function(data, status) {
+            if(data['status']=='OK'){
+                searchData = data['searchData']
+                console.log(searchData)
+                searchFilters = searchData['searchFilters']
+                $.each(searchFilters, function(index, item){
+                    html = '<a href="#" onclick="filterByYear(\''+item['name']+'\')" class="list-group-item">'+item['name']+' <span class="float-right badge badge-light round">'+ item['count']+'</span> </a>'
+                    $('#year-filter').append(html)
+                })
+            }
+        })
+
+        jqxhr.fail(function(data, status) {
+            console.log(data['responseText']);            
+        });
+    }
 
     populateSearchResults = function(searchResult){
         $('#result-container').empty()
@@ -85,29 +125,44 @@ $( document ).ready(function() {
         })
     }    
 
-    getFilteredResults = function(filterName){
-        filterString = filterName
+    filterByCompany = function(companyName){
+        if(filters.length==0){
+            filters.push({"filterName":"company", "filterValue":companyName})
+        }else{
+            for(var i=0; i < filters.length; i++){
+                if(filters[i]["filterName"]=="company"){
+                    filters[i]["filterValue"]=companyName
+                }
+            }
+        }
         getPage(1)
     }
-    $('#search-btn').click(function(){ 
-        filterString = '';             
-        getPage(1)
-    });
 
-    // toggleFilters = function(){
-    //     if(filtersVisible){            
-    //         $('#filter-container').slideUp()
-    //         $(this).html('Show Filters&nbsp;&nbsp;&#8681;')            
-    //     }else{
-    //         $('#filter-container').slideDown()
-    //         $(this).html('Hide Filters&nbsp;&nbsp;&#8679;')                        
-    //     }
-    //     filtersVisible = !filtersVisible
+    filterByYear = function(year){
+        if(filters.length==0){
+            filters.push({"filterName":"year", "filterValue":year})
+        }else{
+            for(var i=0; i < filters.length; i++){
+                if(filters[i]["filterName"]=="year"){
+                    filters[i]["filterValue"]=year
+                }
+            }
+        }
+        getPage(1)
+    }
+
+    // getFilteredResults = function(filterName){
+    //     filterString = filterName
+    //     getPage(1)
     // }
 
-    // $('#filters-btn').click(function(){
-    //     toggleFilters()
-    // });             
+    $('#search-btn').click(function(){ 
+        filterString = '';     
+        filters = []        
+        getPage(1)
+        populateCompanyFilters(1)
+        populateYearFilters(1)
+    });        
 
     getPage = function (pageNumber){        
         $('#modal-container').empty()        
@@ -119,39 +174,39 @@ $( document ).ready(function() {
             return false;
         }
         SEARCH_URL = '/search';
-        
-        var jqxhr = $.get( SEARCH_URL, {'q':query, 'f': filterString, 'p':pageNumber});
-
-        jqxhr.done(function(data, status) {
-            if(data['status']=='OK'){
-                searchData = data['searchData']
-                console.log(searchData)
                 
-                searchResults = searchData['searchResults']
-                searchFilters = searchData['searchFilters']
-                resultCount = searchData['resultCount']
-                
-                if(searchResults.length > 0){                                        
-                    populateSearchResults(searchResults)                    
-                    refreshPagination(resultCount, pageNumber)
-                    populateFilters(searchFilters)
-                    $('aside').show()
-                }else{
-                    $('#pagination ul.pagination').empty()
-                    $('#result-container').html('<div id="result-template" class="row"><div class="col-sm"><div class="card text-center"><h5 class="card-header">Found Nothing</h5></div></div></div>')
-                }
+        var searchPayload = new Object();
+        searchPayload.queryString = query
+        searchPayload.pageNumber = pageNumber
+        searchPayload.filters = filters        
+        // searchPayload.filters = [{"filterName":"company", "filterValue" : filterString}]                         
 
-            }                        
-        });
-
-        jqxhr.fail(function(data, status) {
-            console.log(data['responseText']);            
-        });
-
-        /* jqxhr.always(function(data, status) {
-            console.log("Printing this anyways "+data['status']);
-        });*/
-        
+        $.ajax({
+            url:SEARCH_URL,
+            type:"POST",
+            data:JSON.stringify(searchPayload),
+            contentType:"application/json; charset=utf-8",
+            dataType:"json",
+            success: function(data, status){
+                if(data['status']=='OK'){
+                    searchData = data['searchData']
+                    console.log(searchData)
+                    
+                    searchResults = searchData['searchResults']                
+                    resultCount = searchData['resultCount']
+                    
+                    if(searchResults.length > 0){                                        
+                        populateSearchResults(searchResults)                    
+                        refreshPagination(resultCount, pageNumber)                    
+                        $('aside').show()
+                    }else{
+                        $('#pagination ul.pagination').empty()
+                        $('#result-container').html('<div id="result-template" class="row"><div class="col-sm"><div class="card text-center"><h5 class="card-header">Found Nothing</h5></div></div></div>')
+                    }
+    
+                }  
+            }
+          })            
         return false;
     }
 });

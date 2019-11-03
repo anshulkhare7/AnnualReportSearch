@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
+
+import com.anshul.arsearch.beans.Tag;
+
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -34,6 +38,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -50,41 +56,165 @@ public class SearchController{
     private String elasticHostName;
 
     @Value("${elasticsearch.port}")
-    private int elasticPort;
+    private int elasticPort;                    
     
-    @GetMapping(value="/search")
-    public ResponseJson getMethodName(@RequestParam(name = "q") String queryString, @RequestParam(name = "f") String filterString,
-                                             @RequestParam(name = "p") Integer pageNumber) {        
-                        
-        RestClientBuilder builder = RestClient.builder(new HttpHost(elasticHostName, elasticPort, "http"));        
-        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("elasticadmin", "3|@$t!c777"));
-        builder.setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback(){        
-            @Override
-            public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
-                return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
-            }
-        }); 
-        RestHighLevelClient client = new RestHighLevelClient(builder);
-
-        logger.info("Initiating queryString: [" + queryString + "] | filterString: ["+filterString+"]");
-        
+    @GetMapping(value="/companyfilters")
+    public ResponseJson getCompanyFilters(@RequestParam(name = "q") String queryString, @RequestParam(name = "f") String filterString,
+                                             @RequestParam(name = "p") Integer pageNumber) {
+        logger.info("Initiating company filters query: [" + queryString + "] | filterString: ["+filterString+"]");
         ResponseJson responseJson = new ResponseJson();
         List<SearchResult> searchResults =  new ArrayList<SearchResult>();        
-        List<SearchFilter> searchFilters = new ArrayList<SearchFilter>();
-        SearchData searchData = new SearchData(searchResults, searchFilters);
-
+    
         SearchRequest searchRequest = new SearchRequest();
         
         searchRequest.indices(INDEX_NAME);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+        RestHighLevelClient client = getClient();
         try {                 
                 MatchPhraseQueryBuilder matchPhraseQueryBuilder = new MatchPhraseQueryBuilder("content", queryString);
                 BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();                                
                 boolQueryBuilder.must(matchPhraseQueryBuilder);
 
-                if(null != filterString && !filterString.isEmpty() && !filterString.equalsIgnoreCase("all")){
+                // if(null != filterString && !filterString.isEmpty() && !filterString.equalsIgnoreCase("all")){
+                if(null != filterString && !filterString.isEmpty()){
                     boolQueryBuilder.must(new MatchPhraseQueryBuilder("company", filterString));
                 }
+
+                searchSourceBuilder.query(boolQueryBuilder);
+                searchSourceBuilder.size(0);
+                searchSourceBuilder.from(pageNumber-1);                
+
+                AggregationBuilder companyAggregationBuilder = new TermsAggregationBuilder("group_by_company", null).field("company.keyword").size(10);
+                searchSourceBuilder.aggregation(companyAggregationBuilder);
+
+                searchRequest.source(searchSourceBuilder);
+                logger.info("Request: "+searchRequest.toString());
+
+                SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);                
+                
+                /* Build Response */
+                logger.debug("\n\n" + searchResponse.toString());                                
+
+                SearchHits searchHits = searchResponse.getHits();    
+                long hitsCount = searchHits.getTotalHits().value;
+                logger.info("[companyfilter]Total results for the query phrase '"+queryString+"' : "+hitsCount);                
+
+                List<Filter> companyFilters = new ArrayList<Filter>();
+
+                ParsedStringTerms parsedStringTerms = searchResponse.getAggregations().get("group_by_company");                
+                parsedStringTerms.getBuckets().stream().forEachOrdered( bucket -> {
+                    Terms.Bucket bckt = (Terms.Bucket) bucket;
+                    companyFilters.add(new Filter(bckt.getKey().toString(), bckt.getDocCount(), "Company"));
+                });                
+
+                // companyFilters.add(new CompanyFilter("All", hitsCount));
+                SearchData searchData = new SearchData(searchResults);
+                searchData.setSearchFilters(companyFilters);
+                searchData.setResultCount(hitsCount);
+                logger.debug(searchData.toString());
+                
+                responseJson = new ResponseJson("OK", searchData);                
+
+                client.close();
+        } catch (Exception e) {            
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+        }
+               
+        return responseJson;
+    }
+
+    @GetMapping(value="/yearfilters")
+    public ResponseJson getYearFilters(@RequestParam(name = "q") String queryString, @RequestParam(name = "f") String filterString,
+                                             @RequestParam(name = "p") Integer pageNumber) {
+        logger.info("Initiating year filters query: [" + queryString + "] | filterString: ["+filterString+"]");
+        ResponseJson responseJson = new ResponseJson();
+        List<SearchResult> searchResults =  new ArrayList<SearchResult>();        
+    
+        SearchRequest searchRequest = new SearchRequest();
+        
+        searchRequest.indices(INDEX_NAME);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+        RestHighLevelClient client = getClient();
+        try {                 
+                MatchPhraseQueryBuilder matchPhraseQueryBuilder = new MatchPhraseQueryBuilder("content", queryString);
+                BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();                                
+                boolQueryBuilder.must(matchPhraseQueryBuilder);
+
+                // if(null != filterString && !filterString.isEmpty() && !filterString.equalsIgnoreCase("all")){
+                if(null != filterString && !filterString.isEmpty()){
+                    boolQueryBuilder.must(new MatchPhraseQueryBuilder("company", filterString));
+                }
+
+                searchSourceBuilder.query(boolQueryBuilder);
+                searchSourceBuilder.size(0);
+                searchSourceBuilder.from(pageNumber-1);               
+
+                AggregationBuilder companyAggregationBuilder = new TermsAggregationBuilder("group_by_year", null).field("year.keyword").size(20);
+                searchSourceBuilder.aggregation(companyAggregationBuilder);
+
+                searchRequest.source(searchSourceBuilder);
+                logger.info("Request: "+searchRequest.toString());
+
+                SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);                
+                
+                /* Build Response */
+                logger.debug("\n\n" + searchResponse.toString());                                
+
+                SearchHits searchHits = searchResponse.getHits();    
+                long hitsCount = searchHits.getTotalHits().value;
+                logger.info("[yearfilter]Total results for the query phrase '"+queryString+"' : "+hitsCount);                
+
+                List<Filter> yearFilters = new ArrayList<Filter>();
+
+                ParsedStringTerms parsedStringTerms = searchResponse.getAggregations().get("group_by_year");                
+                parsedStringTerms.getBuckets().stream().forEachOrdered( bucket -> {
+                    Terms.Bucket bckt = (Terms.Bucket) bucket;
+                    yearFilters.add(new Filter(bckt.getKey().toString(), bckt.getDocCount(), "Year"));
+                });                
+
+                // companyFilters.add(new CompanyFilter("All", hitsCount));
+                SearchData searchData = new SearchData(searchResults);
+                searchData.setSearchFilters(yearFilters);
+                searchData.setResultCount(hitsCount);
+
+                logger.debug(searchData.toString());
+                
+                responseJson = new ResponseJson("OK", searchData);                
+
+                client.close();
+        } catch (Exception e) {            
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+        }
+               
+        return responseJson;
+    }
+
+    @PostMapping(value="/search")
+    public ResponseJson getSearchResults(@RequestBody SearchBody searchBody) {
+        String queryString = searchBody.getQueryString();
+        List<Tag> filters = searchBody.getFilters();
+        int pageNumber = searchBody.getPageNumber();
+        logger.info("Initiating search query: [" + queryString + "] | filterString: []");
+        
+        ResponseJson responseJson = new ResponseJson();
+        List<SearchResult> searchResults =  new ArrayList<SearchResult>();        
+    
+        SearchRequest searchRequest = new SearchRequest();
+        
+        searchRequest.indices(INDEX_NAME);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+        RestHighLevelClient client = getClient();
+        try {                 
+                MatchPhraseQueryBuilder matchPhraseQueryBuilder = new MatchPhraseQueryBuilder("content", queryString);
+                BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();                                
+                boolQueryBuilder.must(matchPhraseQueryBuilder);
+
+                filters.forEach(action->boolQueryBuilder.must(new MatchPhraseQueryBuilder(action.getFilterName(), action.getFilterValue())));             
 
                 searchSourceBuilder.query(boolQueryBuilder);
                 searchSourceBuilder.size(10);
@@ -97,28 +227,20 @@ public class SearchController{
 
                 searchSourceBuilder.highlighter(highlightBuilder);
 
-                AggregationBuilder aggregationBuilder = new TermsAggregationBuilder("group_by_company", null).field("company.keyword");
-                searchSourceBuilder.aggregation(aggregationBuilder);
+                // AggregationBuilder companyAggregationBuilder = new TermsAggregationBuilder("group_by_company", null).field("company.keyword").size(100);
+                // searchSourceBuilder.aggregation(companyAggregationBuilder);
 
                 searchRequest.source(searchSourceBuilder);
                 logger.info("Request: "+searchRequest.toString());
 
-                SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+                SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);                
                 
                 /* Build Response */
-                logger.debug("\n\n" + searchResponse.toString());
-                
-                ParsedStringTerms parsedStringTerms = searchResponse.getAggregations().get("group_by_company");                
-                parsedStringTerms.getBuckets().stream().forEachOrdered( bucket -> {
-                    Terms.Bucket bckt = (Terms.Bucket) bucket;
-                    searchFilters.add(new SearchFilter(bckt.getKey().toString(), bckt.getDocCount()));
-                });                
+                logger.debug("\n\n" + searchResponse.toString());                                
 
                 SearchHits searchHits = searchResponse.getHits();    
                 long hitsCount = searchHits.getTotalHits().value;
-                logger.info("Total results for the query phrase '"+queryString+"' : "+hitsCount);
-                searchData.setResultCount(hitsCount);
-                searchFilters.add(new SearchFilter("All", hitsCount));
+                logger.info("Total results for the query phrase '"+queryString+"' : "+hitsCount);                                
 
                 for (SearchHit searchHit : searchHits) {                                        
                     Map<String, Object> sourceAsMap = searchHit.getSourceAsMap();
@@ -137,6 +259,10 @@ public class SearchController{
                     }                    
                     searchResults.add(new SearchResult(companyName, year, page, fragmentString, pdf_url, content));                    
                 }
+
+                
+                SearchData searchData = new SearchData(searchResults);
+                searchData.setResultCount(hitsCount);
                 logger.debug(searchData.toString());
                 
                 responseJson = new ResponseJson("OK", searchData);
@@ -148,4 +274,16 @@ public class SearchController{
                 
         return responseJson;
     }    
+    
+    private RestHighLevelClient getClient(){
+        RestClientBuilder builder = RestClient.builder(new HttpHost(elasticHostName, elasticPort, "http"));        
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("elasticadmin", "3|@$t!c777"));
+        builder.setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback(){        
+            @Override
+            public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
+                return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+            }
+        }); 
+        return new RestHighLevelClient(builder);   
+    }
 }
