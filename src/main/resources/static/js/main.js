@@ -1,10 +1,11 @@
 $( document ).ready(function() {          
     console.log('Document ready!')
 
+    var filters = []
     filterString = '';
-    filtersVisible = false;
+    filtersVisible = false; 
 
-    $('#filters-btn').hide();
+    $('aside').hide()
     $('#pagination').hide()
     $('#filter-container').hide()
 
@@ -39,19 +40,71 @@ $( document ).ready(function() {
 
         $('#pagination ul.pagination').html(pageHtml)
         $('#pagination').show()
-    }    
+    }       
 
-    populateFilters = function(searchFilters){
-        $('#filter-body').empty()
-        $.each(searchFilters, function(index, item){
-            grp_name = 'group-'+(index+1)
-            html = '<div class="btn-group mr-2" role="group" aria-label="'+grp_name+'">';
-            html += '<button type="button" onclick="getFilteredResults(\''+item['name']+'\')" class="btn btn-primary btn-sm">';
-            html += '<span>'+item['name']+'</span>&nbsp;&nbsp;';
-            html += '<span class="badge badge-light">' + item['count'] + '</span></button></div>';                        
-            $('#filter-body').append(html)
-        })
-    }    
+    populateCompanyFilters = function(pageNumber){
+        $('#company-filter').empty()
+        query  = $('#search-input').val()
+        if(query==''){
+            return false;
+        }
+        COMPANY_FILTER_URL = '/companyfilters';
+        
+        var searchPayload = new Object();
+        searchPayload.queryString = query
+        searchPayload.pageNumber = pageNumber
+        searchPayload.filters = filters
+                
+        $.ajax({
+            url:COMPANY_FILTER_URL,
+            type:"POST",
+            data:JSON.stringify(searchPayload),
+            contentType:"application/json; charset=utf-8",
+            dataType:"json",
+            success: function(data, status){
+                if(data['status']=='OK'){
+                    searchData = data['searchData']                    
+                    searchFilters = searchData['searchFilters']
+                    $.each(searchFilters, function(index, item){
+                        html = '<a href="#" onclick="filterByCompany(\''+item['name']+'\')" class="list-group-item">'+item['name']+' <span class="float-right badge badge-light round">'+ item['count']+'</span> </a>'
+                        $('#company-filter').append(html)
+                    })
+                }
+            }
+        });  
+    }
+
+    populateYearFilters = function(pageNumber){
+        $('#year-filter').empty()
+        query  = $('#search-input').val()
+        if(query==''){
+            return false;
+        }
+        YEAR_FILTER_URL = '/yearfilters';
+
+        var searchPayload = new Object();
+        searchPayload.queryString = query
+        searchPayload.pageNumber = pageNumber
+        searchPayload.filters = filters
+        
+        $.ajax({
+            url:YEAR_FILTER_URL,
+            type:"POST",
+            data:JSON.stringify(searchPayload),
+            contentType:"application/json; charset=utf-8",
+            dataType:"json",
+            success: function(data, status){
+                if(data['status']=='OK'){
+                    searchData = data['searchData']                    
+                    searchFilters = searchData['searchFilters']
+                    $.each(searchFilters, function(index, item){
+                        html = '<a href="#" onclick="filterByYear(\''+item['name']+'\')" class="list-group-item">'+item['name']+' <span class="float-right badge badge-light round">'+ item['count']+'</span> </a>'
+                        $('#year-filter').append(html)
+                    })
+                }
+            }
+        });            
+    }
 
     populateSearchResults = function(searchResult){
         $('#result-container').empty()
@@ -84,29 +137,58 @@ $( document ).ready(function() {
         })
     }    
 
-    getFilteredResults = function(filterName){
-        filterString = filterName
+    filterByCompany = function(companyName){
+        $.each(filters, function(index, item){
+            if(item['filterName']=='company')
+            filters.splice(index, 1)    
+        })
+        filters.push({"filterName":"company", "filterValue":companyName})  
         getPage(1)
+        populateYearFilters(1)
+        populateCompanyFilters(1)
+        refreshSelectedFilters()
     }
+
+    filterByYear = function(year){
+        $.each(filters, function(index, item){
+            if(item['filterName']=='year')
+            filters.splice(index, 1)    
+        })
+        filters.push({"filterName":"year", "filterValue":year})
+        getPage(1)
+        populateYearFilters(1)
+        populateCompanyFilters(1)
+        refreshSelectedFilters()
+    }    
+
     $('#search-btn').click(function(){ 
-        filterString = '';             
+        filterString = '';     
+        filters = []        
         getPage(1)
-    });
+        populateCompanyFilters(1)
+        populateYearFilters(1)
+        refreshSelectedFilters()
+    });        
 
-    toggleFilters = function(){
-        if(filtersVisible){            
-            $('#filter-container').slideUp()
-            $(this).html('Show Filters&nbsp;&nbsp;&#8681;')            
-        }else{
-            $('#filter-container').slideDown()
-            $(this).html('Hide Filters&nbsp;&nbsp;&#8679;')                        
-        }
-        filtersVisible = !filtersVisible
+    refreshSelectedFilters = function(){
+        $('#selected-filters').empty()
+        $.each(filters, function(index, item){
+            html = '<a href="#" onclick="removeFilter(\''+item['filterName']+'\')" class="list-group-item">'+item['filterValue']+' <span class="float-right badge badge-light round"> &#10060;</span> </a>'
+            $('#selected-filters').append(html)
+        })
     }
 
-    $('#filters-btn').click(function(){
-        toggleFilters()
-    });             
+    removeFilter = function(filtername){        
+        $.each(filters, function(index, item){
+            if (item['filterName']==filtername) {                
+                filters.splice(index, 1)
+            }
+        })
+        getPage(1)
+        populateCompanyFilters(1)
+        populateYearFilters(1)
+        refreshSelectedFilters()
+    }
 
     getPage = function (pageNumber){        
         $('#modal-container').empty()        
@@ -118,39 +200,37 @@ $( document ).ready(function() {
             return false;
         }
         SEARCH_URL = '/search';
-        
-        var jqxhr = $.get( SEARCH_URL, {'q':query, 'f': filterString, 'p':pageNumber});
-
-        jqxhr.done(function(data, status) {
-            if(data['status']=='OK'){
-                searchData = data['searchData']
-                console.log(searchData)
                 
-                searchResults = searchData['searchResults']
-                searchFilters = searchData['searchFilters']
-                resultCount = searchData['resultCount']
-                
-                if(searchResults.length > 0){                                        
-                    populateSearchResults(searchResults)                    
-                    refreshPagination(resultCount, pageNumber)
-                    populateFilters(searchFilters)
-                    $('#filters-btn').show();
-                }else{
-                    $('#pagination ul.pagination').empty()
-                    $('#result-container').html('<div id="result-template" class="row"><div class="col-sm"><div class="card text-center"><h5 class="card-header">Found Nothing</h5></div></div></div>')
-                }
+        var searchPayload = new Object();
+        searchPayload.queryString = query
+        searchPayload.pageNumber = pageNumber
+        searchPayload.filters = filters        
 
-            }                        
-        });
-
-        jqxhr.fail(function(data, status) {
-            console.log(data['responseText']);            
-        });
-
-        /* jqxhr.always(function(data, status) {
-            console.log("Printing this anyways "+data['status']);
-        });*/
-        
+        $.ajax({
+            url:SEARCH_URL,
+            type:"POST",
+            data:JSON.stringify(searchPayload),
+            contentType:"application/json; charset=utf-8",
+            dataType:"json",
+            success: function(data, status){
+                if(data['status']=='OK'){
+                    searchData = data['searchData']                                        
+                    searchResults = searchData['searchResults']                
+                    resultCount = searchData['resultCount']
+                    
+                    if(searchResults.length > 0){                                        
+                        populateSearchResults(searchResults)                    
+                        refreshPagination(resultCount, pageNumber)                    
+                        $('aside').show()
+                    }else{
+                        $('#pagination ul.pagination').empty()
+                        $('#result-container').html('<div id="result-template" class="row"><div class="col-sm"><div class="card text-center"><h5 class="card-header">Found Nothing</h5></div></div></div>')
+                    }
+    
+                }  
+            }
+          })            
         return false;
     }
 });
+

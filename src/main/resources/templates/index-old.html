@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head lang="en">
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">        
+        <title>Annual Report Search</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link href="/css/main.css" rel="stylesheet">
+        <link rel="shortcut icon" type="image/png" href="/img/favicon-arsearch.png"/>
+    </head>
+    <body>
+        <!-- Entry point to our ReactJS single page web application -->
+        <!-- <div id="root"></div> -->
+        <nav class="navbar navbar-light bg-light justify-content-between">
+            <a class="navbar-brand">Annual Report Search</a>
+            <button id="filters-btn" class="btn btn-outline-success btn-sm" type="button">
+                        Show Filters&nbsp;&nbsp;&#8681;
+            </button>
+            <form class="form-inline">
+                <input id="search-input" class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                <button id="search-btn" class="btn btn-outline-success my-2 my-sm-0" type="button">Search</button>                
+            </form>
+        </nav> 
+        <nav class="navbar navbar-light bg-light">
+            <div id="filter-container">
+                <div class="card card-body">
+                    <div id="filter-body" class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups"></div>    
+                </div>
+            </div>
+        </nav>   
+        <nav id="pagination" aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">                                                
+            </ul>
+        </nav>               
+        <div id="result-container" class="container"></div>
+        <div id="modal-container"></div>
+
+        <!-- template for modal -->
+        <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">...</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>                    
+                </div>
+                </div>
+            </div>
+        </div>        
+        <!-- template for modal -->
+
+        <!-- template for cards -->
+        <div id="result-template" style="display:none" class="row">
+            <div class="col-sm">
+                <div class="card text-center">
+                    <h5 class="card-header">Company Name</h5>
+                    <div class="card-body">
+                        <!-- <h5 class="card-title">AR Year</h5> -->
+                        <p class="card-text"></p>
+                        <!-- <a href="#" class="btn btn-primary">Annual Report PDF</a>  -->
+                        <!-- <a href="#" class="btn btn-primary">View Page (text)</a> -->
+                    </div> 
+                    <div class="card-footer text-muted"></div>                       
+                </div>
+            </div>                                          
+        </div> 
+        <!-- template for cards -->
+
+        <nav id="pagination" aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">                                                
+            </ul>
+        </nav>        
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        <script src="/js/main-old.js"></script>
+    </body>
+</html>

@@ -11,9 +11,9 @@ public class MainController {
         return "index";
     }
 
-    @RequestMapping(value = "/new")
+    @RequestMapping(value = "/old")
     public String index_new() {
-        return "index-new";
+        return "index-old";
     }
 
 }

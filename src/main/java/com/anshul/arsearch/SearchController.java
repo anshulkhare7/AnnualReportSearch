@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-
 import com.anshul.arsearch.beans.Tag;
 
 import org.apache.http.HttpHost;
@@ -37,10 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @PropertySource(ignoreResourceNotFound = true, value = "classpath:application.properties")
@@ -58,10 +54,12 @@ public class SearchController{
     @Value("${elasticsearch.port}")
     private int elasticPort;                    
     
-    @GetMapping(value="/companyfilters")
-    public ResponseJson getCompanyFilters(@RequestParam(name = "q") String queryString, @RequestParam(name = "f") String filterString,
-                                             @RequestParam(name = "p") Integer pageNumber) {
-        logger.info("Initiating company filters query: [" + queryString + "] | filterString: ["+filterString+"]");
+    @PostMapping(value="/companyfilters")
+    public ResponseJson getCompanyFilters(@RequestBody SearchBody searchBody) {
+        String queryString = searchBody.getQueryString();
+        List<Tag> filters = searchBody.getFilters();
+        int pageNumber = searchBody.getPageNumber();
+        logger.info("Initiating search query: [" + queryString + "] | filterString: []");
         ResponseJson responseJson = new ResponseJson();
         List<SearchResult> searchResults =  new ArrayList<SearchResult>();        
     
@@ -76,14 +74,10 @@ public class SearchController{
                 BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();                                
                 boolQueryBuilder.must(matchPhraseQueryBuilder);
 
-                // if(null != filterString && !filterString.isEmpty() && !filterString.equalsIgnoreCase("all")){
-                if(null != filterString && !filterString.isEmpty()){
-                    boolQueryBuilder.must(new MatchPhraseQueryBuilder("company", filterString));
-                }
+                filters.forEach(action->boolQueryBuilder.must(new MatchPhraseQueryBuilder(action.getFilterName(), action.getFilterValue())));
 
                 searchSourceBuilder.query(boolQueryBuilder);
-                searchSourceBuilder.size(0);
-                searchSourceBuilder.from(pageNumber-1);                
+                searchSourceBuilder.size(0);                             
 
                 AggregationBuilder companyAggregationBuilder = new TermsAggregationBuilder("group_by_company", null).field("company.keyword").size(10);
                 searchSourceBuilder.aggregation(companyAggregationBuilder);
@@ -107,8 +101,7 @@ public class SearchController{
                     Terms.Bucket bckt = (Terms.Bucket) bucket;
                     companyFilters.add(new Filter(bckt.getKey().toString(), bckt.getDocCount(), "Company"));
                 });                
-
-                // companyFilters.add(new CompanyFilter("All", hitsCount));
+                
                 SearchData searchData = new SearchData(searchResults);
                 searchData.setSearchFilters(companyFilters);
                 searchData.setResultCount(hitsCount);
@@ -125,10 +118,12 @@ public class SearchController{
         return responseJson;
     }
 
-    @GetMapping(value="/yearfilters")
-    public ResponseJson getYearFilters(@RequestParam(name = "q") String queryString, @RequestParam(name = "f") String filterString,
-                                             @RequestParam(name = "p") Integer pageNumber) {
-        logger.info("Initiating year filters query: [" + queryString + "] | filterString: ["+filterString+"]");
+    @PostMapping(value="/yearfilters")
+    public ResponseJson getYearFilters(@RequestBody SearchBody searchBody) {
+        String queryString = searchBody.getQueryString();
+        List<Tag> filters = searchBody.getFilters();
+        int pageNumber = searchBody.getPageNumber();
+        logger.info("Initiating search query: [" + queryString + "] | filterString: []");
         ResponseJson responseJson = new ResponseJson();
         List<SearchResult> searchResults =  new ArrayList<SearchResult>();        
     
@@ -143,14 +138,10 @@ public class SearchController{
                 BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();                                
                 boolQueryBuilder.must(matchPhraseQueryBuilder);
 
-                // if(null != filterString && !filterString.isEmpty() && !filterString.equalsIgnoreCase("all")){
-                if(null != filterString && !filterString.isEmpty()){
-                    boolQueryBuilder.must(new MatchPhraseQueryBuilder("company", filterString));
-                }
+                filters.forEach(action->boolQueryBuilder.must(new MatchPhraseQueryBuilder(action.getFilterName(), action.getFilterValue())));             
 
                 searchSourceBuilder.query(boolQueryBuilder);
-                searchSourceBuilder.size(0);
-                searchSourceBuilder.from(pageNumber-1);               
+                searchSourceBuilder.size(0);                             
 
                 AggregationBuilder companyAggregationBuilder = new TermsAggregationBuilder("group_by_year", null).field("year.keyword").size(20);
                 searchSourceBuilder.aggregation(companyAggregationBuilder);
@@ -174,8 +165,7 @@ public class SearchController{
                     Terms.Bucket bckt = (Terms.Bucket) bucket;
                     yearFilters.add(new Filter(bckt.getKey().toString(), bckt.getDocCount(), "Year"));
                 });                
-
-                // companyFilters.add(new CompanyFilter("All", hitsCount));
+                
                 SearchData searchData = new SearchData(searchResults);
                 searchData.setSearchFilters(yearFilters);
                 searchData.setResultCount(hitsCount);
@@ -226,10 +216,7 @@ public class SearchController{
                 highlightBuilder.field(highlightContent);
 
                 searchSourceBuilder.highlighter(highlightBuilder);
-
-                // AggregationBuilder companyAggregationBuilder = new TermsAggregationBuilder("group_by_company", null).field("company.keyword").size(100);
-                // searchSourceBuilder.aggregation(companyAggregationBuilder);
-
+                
                 searchRequest.source(searchSourceBuilder);
                 logger.info("Request: "+searchRequest.toString());
 
